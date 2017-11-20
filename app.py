@@ -6,16 +6,16 @@ import requests
 
 app = Flask(__name__)
 
-PAGE_ACCESS_TOKEN = "" #paste here your facebook page access token
+PAGE_ACCESS_TOKEN = ""
 
 
 @app.route('/', methods=['GET'])
 def verify():
 	# Webhook verification
     if request.args.get("hub.mode") == "subscribe" and request.args.get("hub.challenge"):
-        if not request.args.get("hub.verify_token") == "hello": #"hello" is your very token from webhook setup from facebook messanger platform
+        if not request.args.get("hub.verify_token") == "hello":
             return "Verification token mismatch", 403
-        return request.args["hub.challenge"], 200
+        return request.args["hub.challenge"], 200   
     return "Hello world", 200
 
 
@@ -39,34 +39,47 @@ def webhook():
 						else:
 							messaging_text = 'no text'
 
-						print("messaging_text:"+messaging_text)
-						categories = wit_response(messaging_text)
-						print("categories is:"+categories)
-						if categories.startswith('Please'):
+						#print("messaging_text:"+messaging_text)
+						greetlist=['hi','hii','hiii','hello','helloo','hey']
+						if(messaging_text.lower() in greetlist):
+							greetresp='Hi, I am a Wikibot. I can provide you information from Wikipedia. Please ask your question'
 							response_content = {
-									            "recipient": {
-									                "id": sender_id
-									            },
-									            "message": {
-									            "text": categories
-									            }
-									        }
-						else:
-							elements= get_wiki_content(categories)
-							elements=''.join(str(e) for e in elements)
-							print(elements)
-							ele=elements[300:400]
-							lst=ele.find('.')
-							lst=ele[:lst+1]
-							response_content = {
+											            "recipient": {
+											                "id": sender_id
+											            },
+											            "message": {
+											            "text": greetresp
+											            
+											            }
+											        }
+						else :
+							#categories = wit_response("hello")
+							categories = ""
+							#print("categories is:"+categories)
+							if categories.startswith('Please'):
+								response_content = {
 										            "recipient": {
 										                "id": sender_id
 										            },
 										            "message": {
-										            "text": elements[:300]+lst
-										            
+										            "text": categories
 										            }
 										        }
+							else:
+								elements,urlinfo= get_wiki_content(messaging_text)
+								elements=''.join(str(e) for e in elements)
+								#print(elements)
+								ele=elements[300:400]
+								lst=ele.find('.')
+								lst=ele[:lst+1]
+								response_content = {
+											            "recipient": {
+											                "id": sender_id
+											            },
+											            "message": {
+											            "text": elements[:300]+lst +'\n'+'Read More: '+ urlinfo											            
+											            }
+											        }
 						headers = {"Content-Type": "application/json"}
 						url = "https://graph.facebook.com/v2.6/me/messages?access_token=%s" % PAGE_ACCESS_TOKEN
 						r = requests.post(url, data=json.dumps(response_content), headers=headers)	
