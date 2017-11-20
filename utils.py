@@ -1,7 +1,7 @@
 from wit import Wit 
 import wikipedia as wk
 
-access_token = "Y5FPTWSLB5CGOOCCES4L246P2GM6FRHO"
+access_token = ""
 
 client = Wit(access_token = access_token)
 
